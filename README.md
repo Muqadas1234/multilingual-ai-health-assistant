@@ -63,9 +63,9 @@ A sophisticated, production-ready AI-powered health assistant that provides inte
 
 ### 🏆 Hackathon Team Members
 
-| Role | Name | GitHub | LinkedIn | Contribution |
+| Role | Name  | Contribution |
 |------|------|--------|----------|--------------|
-| **Team Lead & Full-Stack Developer** | [Ahmed Gul] |and Muqadas | Backend API, AI Integration, Project Architecture |
+| **Team Lead & Full-Stack Developer**  [Ahmed Gul and Muqadas | Backend API, AI Integration, Project Architecture |
 | **Frontend Developer** | [Muqadas] | UI/UX Design, Responsive Layout, JavaScript |
  |**Testing** Ahmed Gul| | Deployment, Testing, Documentation |
  |**Muskan** presenation |
@@ -75,10 +75,7 @@ A sophisticated, production-ready AI-powered health assistant that provides inte
 ## 🏆 Hackathon Info
 
 ### 🎯 Project Overview
-**Multilingual AI Health Assistant** was developed during  gen ai Hackathon by pak angles  - a **[duration]** hackathon focused on **[theme/topic]**.
-
-
-
+**Multilingual AI Health Assistant** was developed during  gen ai Hackathon by pak angles  - 
 
 ### 🎪 Demo & Presentation
 - **Live Demo**: [Demo Link/Video]
