@@ -63,13 +63,14 @@ A sophisticated, production-ready AI-powered health assistant that provides inte
 
 ### 🏆 Hackathon Team Members
 
-| Role | Name  | Contribution |
-|------|------|--------|----------|--------------|
-| **Team Lead & Full-Stack Developer**  [Ahmed Gul and Muqadas | Backend API, AI Integration, Project Architecture |
-| **Frontend Developer** | [Muqadas] | UI/UX Design, Responsive Layout, JavaScript |
- |**Testing** Ahmed Gul| | Deployment, Testing, Documentation |
- |**Muskan** presenation |
-  |**Muhammad** |Project Coordination|
+| Role                      | Name(s)                 | Contribution                                      |
+|---------------------------|---------------------    |---------------------------------------------------|
+| Team Lead & Full-Stack Dev| sir Ahmed Gul and Muqadas  | Backend API, AI Integration, Project Architecture |
+| Frontend Developer        | Muqadas                 | UI/UX Design, Responsive Layout, JavaScript       |
+| Testing & Deployment      | Ahmed Gul               | Deployment, Testing, Documentation                |
+| Presentation              | Muskan                  | Final Presentation, Slides                        |
+| Project Coordinator       | Muhammad                | Project Coordination                              |
+
 
 
 ## 🏆 Hackathon Info
