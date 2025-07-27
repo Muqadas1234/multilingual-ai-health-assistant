@@ -1,0 +1,12 @@
+Flask==2.3.3
+groq==0.30.0
+python-dotenv==1.0.0
+gTTS==2.4.0
+reportlab==4.0.4
+Pillow==10.0.1
+langdetect==1.0.9
+requests==2.31.0
+Werkzeug==2.3.7
+tavily-python==0.3.1
+
+ 

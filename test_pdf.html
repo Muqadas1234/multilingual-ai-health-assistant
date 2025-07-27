@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Test</title>
+</head>
+<body>
+    <h1>PDF Generation Test</h1>
+    <button onclick="testPdf()">Test PDF Generation</button>
+    <div id="result"></div>
+
+    <script>
+        async function testPdf() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing PDF generation...';
+            
+            try {
+                // First, create a conversation
+                const chatResponse = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'I have a headache'
+                    })
+                });
+
+                const chatData = await chatResponse.json();
+                console.log('Chat response:', chatData);
+                
+                if (chatData.conversation_id) {
+                    // Now try to generate PDF
+                    const pdfResponse = await fetch(`/api/generate-pdf/${chatData.conversation_id}`);
+                    
+                    if (pdfResponse.ok) {
+                        const blob = await pdfResponse.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `test_report_${chatData.conversation_id}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        
+                        resultDiv.innerHTML = '✅ PDF generated and downloaded successfully!';
+                    } else {
+                        resultDiv.innerHTML = '❌ PDF generation failed';
+                    }
+                } else {
+                    resultDiv.innerHTML = '❌ No conversation ID received';
+                }
+            } catch (error) {
+                console.error('Test error:', error);
+                resultDiv.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html> 

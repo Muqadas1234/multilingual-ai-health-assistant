@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🏥 Multilingual AI Health Assistant</title>
+
+  <!-- Stylesheets -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='style.css') }}?v=1.2" rel="stylesheet">
+</head>
+
+<body>
+  <div class="chat-wrapper">
+    <div class="chat-app">
+      <!-- Header -->
+      <div class="chat-header">
+        <div class="header-avatar">🤖</div>
+        <div class="header-info">
+          <h5>AI Health Assistant</h5>
+          <small>Multilingual | Voice + Auto-Location</small>
+        </div>
+        <div class="header-actions">
+          <button class="header-btn drug-info-btn" onclick="showMedicineDatabase()">
+            <i class="fas fa-pills"></i>
+            <span>Drug Info</span>
+          </button>
+          <button class="header-btn diagnostic-btn" onclick="showDiagnosticsModal()">
+            <i class="fas fa-stethoscope"></i>
+            <span>AI Diagnostics</span>
+          </button>
+          <div class="language-selector">
+            <select id="languageSelect" class="form-select">
+              <option value="en" selected>English</option>
+              <option value="ur">اردو (Urdu)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="chat-messages" id="chatMessages">
+        <div class="disclaimer-card">
+          <div class="disclaimer-icon">⚠️</div>
+          <div class="disclaimer-content">
+            <strong>Disclaimer:</strong>
+            <p>This assistant is not a substitute for professional medical advice or emergency care.</p>
+          </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator" style="display: none;">AI is typing...</div>
+        <div id="messagesContainer"></div>
+      </div>
+
+      <!-- Input -->
+      <div class="chat-input-area">
+        <div class="input-container">
+          <div class="input-wrapper">
+            <div class="input-row">
+              <textarea id="messageInput" class="message-input" rows="1" placeholder="Describe your symptoms..."></textarea>
+            </div>
+            <button class="send-button" onclick="sendMessage()">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button class="action-btn voice-btn" onclick="startVoiceInput()"><i class="fas fa-microphone"></i> <span>Voice Input</span></button>
+          <button class="action-btn tts-btn" onclick="toggleTextToSpeech()"><i class="fas fa-volume-up"></i> <span>Voice Output</span></button>
+          <button class="action-btn save-btn" onclick="saveConversationToServer()"><i class="fas fa-save"></i> <span>Save</span></button>
+          <button class="action-btn pdf-btn" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> <span>PDF</span></button>
+          <button class="action-btn share-btn" onclick="showShareOptions()"><i class="fab fa-share-alt"></i> <span>Share</span></button>
+          <button class="action-btn saved-btn" onclick="loadSavedChats()" data-bs-toggle="modal" data-bs-target="#savedChatsModal"><i class="fas fa-book"></i> <span>View Saved</span></button>
+          <button class="action-btn clear-btn" onclick="clearMessages()"><i class="fas fa-trash"></i> <span>Clear</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Saved Chats -->
+  <div class="modal fade" id="savedChatsModal" tabindex="-1" aria-labelledby="savedChatsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="savedChatsLabel">📚 Saved Conversations</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="savedChatsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Share Options -->
+  <div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="shareModalLabel">📤 Share Health Report</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="share-options">
+            <div class="share-option">
+              <button class="btn btn-success btn-lg w-100 mb-3" onclick="shareViaWhatsApp()">
+                <i class="fab fa-whatsapp"></i> Share via WhatsApp
+              </button>
+            </div>
+            <div class="share-option">
+              <button class="btn btn-info btn-lg w-100" onclick="copyShareLink()">
+                <i class="fas fa-link"></i> Copy Share Link
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for AI Diagnostics -->
+  <div class="modal fade" id="diagnosticsModal" tabindex="-1" aria-labelledby="diagnosticsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content diagnostics-modal">
+        <div class="modal-header diagnostics-header">
+          <div class="header-content">
+            <div class="header-icon">
+              <i class="fas fa-stethoscope"></i>
+            </div>
+            <div class="header-text">
+              <h4 class="modal-title" id="diagnosticsModalLabel">🩺 AI-Powered Diagnostics</h4>
+              <p class="header-subtitle">Advanced medical analysis powered by artificial intelligence</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        
+        <div class="modal-body diagnostics-body">
+          <!-- Feature Cards -->
+          <div class="feature-cards mb-4">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="feature-card active" onclick="switchDiagnosticTab('symptom')">
+                  <div class="card-icon">
+                    <i class="fas fa-search"></i>
+                  </div>
+                  <div class="card-content">
+                    <h6>Symptom Analyzer</h6>
+                    <p>Advanced symptom assessment</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="feature-card" onclick="switchDiagnosticTab('disease')">
+                  <div class="card-icon">
+                    <i class="fas fa-virus"></i>
+                  </div>
+                  <div class="card-content">
+                    <h6>Disease Predictor</h6>
+                    <p>Risk assessment & predictions</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="feature-card" onclick="switchDiagnosticTab('genetic')">
+                  <div class="card-icon">
+                    <i class="fas fa-dna"></i>
+                  </div>
+                  <div class="card-content">
+                    <h6>Genetic Risk</h6>
+                    <p>Family history analysis</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="feature-card" onclick="switchDiagnosticTab('mental')">
+                  <div class="card-icon">
+                    <i class="fas fa-brain"></i>
+                  </div>
+                  <div class="card-content">
+                    <h6>Mental Health</h6>
+                    <p>Psychological assessment</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="feature-card" onclick="switchDiagnosticTab('child')">
+                  <div class="card-icon">
+                    <i class="fas fa-baby"></i>
+                  </div>
+                  <div class="card-content">
+                    <h6>Child Health</h6>
+                    <p>Pediatric monitoring</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-content" id="diagnosticTabContent">
+            <!-- Symptom Analyzer Tab -->
+            <div class="tab-pane fade show active" id="symptom" role="tabpanel">
+              <div class="diagnostic-section">
+                <div class="section-header">
+                  <h5><i class="fas fa-search"></i> Symptom Analyzer</h5>
+                  <p>Get comprehensive analysis of your symptoms</p>
+                </div>
+                <div class="diagnostic-form">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="symptomAge" class="form-label">
+                          <i class="fas fa-birthday-cake"></i> Age
+                        </label>
+                        <textarea class="form-control" id="symptomAge" placeholder="Enter age" rows="2"></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="symptomGender" class="form-label">
+                          <i class="fas fa-user"></i> Gender
+                        </label>
+                        <textarea class="form-control" id="symptomGender" placeholder="Select Gender (Male/Female/Other)" rows="2"></textarea>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="symptomText" class="form-label">
+                          <i class="fas fa-stethoscope"></i> Symptoms
+                        </label>
+                        <textarea class="form-control" id="symptomText" rows="2" placeholder="Describe your symptoms in detail..."></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="medicalHistory" class="form-label">
+                          <i class="fas fa-history"></i> Medical History
+                        </label>
+                        <textarea class="form-control" id="medicalHistory" rows="2" placeholder="Any relevant medical history..."></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="action-section">
+                    <button class="btn btn-primary analyze-btn" onclick="analyzeSymptoms()">
+                      <i class="fas fa-search"></i> Analyze Symptoms
+                    </button>
+                  </div>
+                </div>
+                <div id="symptomResult" class="result-section"></div>
+              </div>
+            </div>
+            
+            <!-- Disease Predictor Tab -->
+            <div class="tab-pane fade" id="disease" role="tabpanel">
+              <div class="diagnostic-section">
+                <div class="section-header">
+                  <h5><i class="fas fa-virus"></i> Disease Predictor</h5>
+                  <p>Assess disease risk based on symptoms and factors</p>
+                </div>
+                <div class="diagnostic-form">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="diseaseAge" class="form-label">
+                          <i class="fas fa-birthday-cake"></i> Age
+                        </label>
+                        <textarea class="form-control" id="diseaseAge" placeholder="Enter age" rows="2"></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="diseaseSymptoms" class="form-label">
+                          <i class="fas fa-stethoscope"></i> Symptoms
+                        </label>
+                        <textarea class="form-control" id="diseaseSymptoms" rows="2" placeholder="List your symptoms..."></textarea>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="riskFactors" class="form-label">
+                          <i class="fas fa-exclamation-triangle"></i> Risk Factors
+                        </label>
+                        <textarea class="form-control" id="riskFactors" rows="2" placeholder="Any risk factors (smoking, diabetes, etc.)..."></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="familyHistory" class="form-label">
+                          <i class="fas fa-users"></i> Family History
+                        </label>
+                        <textarea class="form-control" id="familyHistory" rows="2" placeholder="Family medical history..."></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="action-section">
+                    <button class="btn btn-warning predict-btn" onclick="predictDisease()">
+                      <i class="fas fa-virus"></i> Predict Disease Risk
+                    </button>
+                  </div>
+                </div>
+                <div id="diseaseResult" class="result-section"></div>
+              </div>
+            </div>
+            
+            <!-- Genetic Risk Calculator Tab -->
+            <div class="tab-pane fade" id="genetic" role="tabpanel">
+              <div class="diagnostic-section">
+                <div class="section-header">
+                  <h5><i class="fas fa-dna"></i> Genetic Risk Calculator</h5>
+                  <p>Analyze genetic risk factors based on family history</p>
+                </div>
+                <div class="diagnostic-form">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="geneticAge" class="form-label">
+                          <i class="fas fa-birthday-cake"></i> Age
+                        </label>
+                        <textarea class="form-control" id="geneticAge" placeholder="Enter age" rows="2"></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="ethnicity" class="form-label">
+                          <i class="fas fa-globe"></i> Ethnicity
+                        </label>
+                        <textarea class="form-control" id="ethnicity" placeholder="Your ethnicity" rows="2"></textarea>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="familyHistoryGenetic" class="form-label">
+                          <i class="fas fa-users"></i> Family History
+                        </label>
+                        <textarea class="form-control" id="familyHistoryGenetic" rows="2" placeholder="Detailed family medical history..."></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="action-section">
+                    <button class="btn btn-info genetic-btn" onclick="calculateGeneticRisk()">
+                      <i class="fas fa-dna"></i> Calculate Genetic Risk
+                    </button>
+                  </div>
+                </div>
+                <div id="geneticResult" class="result-section"></div>
+              </div>
+            </div>
+            
+            <!-- Mental Health Assessment Tab -->
+            <div class="tab-pane fade" id="mental" role="tabpanel">
+              <div class="diagnostic-section">
+                <div class="section-header">
+                  <h5><i class="fas fa-brain"></i> Mental Health Assessment</h5>
+                  <p>Comprehensive psychological evaluation and support</p>
+                </div>
+                <div class="diagnostic-form">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="mentalSymptoms" class="form-label">
+                          <i class="fas fa-brain"></i> Mental Health Symptoms
+                        </label>
+                        <textarea class="form-control" id="mentalSymptoms" rows="2" placeholder="Describe your mental health symptoms..."></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="moodChanges" class="form-label">
+                          <i class="fas fa-smile"></i> Mood Changes
+                        </label>
+                        <textarea class="form-control" id="moodChanges" rows="2" placeholder="Any recent mood changes..."></textarea>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="sleepPatterns" class="form-label">
+                          <i class="fas fa-bed"></i> Sleep Patterns
+                        </label>
+                        <textarea class="form-control" id="sleepPatterns" rows="2" placeholder="Describe your sleep patterns..."></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="stressLevels" class="form-label">
+                          <i class="fas fa-tachometer-alt"></i> Stress Levels
+                        </label>
+                        <textarea class="form-control" id="stressLevels" rows="2" placeholder="Current stress levels and sources..."></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="action-section">
+                    <button class="btn btn-success mental-btn" onclick="assessMentalHealth()">
+                      <i class="fas fa-brain"></i> Assess Mental Health
+                    </button>
+                  </div>
+                </div>
+                <div id="mentalResult" class="result-section"></div>
+              </div>
+            </div>
+            
+            <!-- Child Health Monitor Tab -->
+            <div class="tab-pane fade" id="child" role="tabpanel">
+              <div class="diagnostic-section">
+                <div class="section-header">
+                  <h5><i class="fas fa-baby"></i> Child Health Monitor</h5>
+                  <p>Pediatric health assessment and monitoring</p>
+                </div>
+                <div class="diagnostic-form">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="childAge" class="form-label">
+                          <i class="fas fa-birthday-cake"></i> Child Age
+                        </label>
+                        <textarea class="form-control" id="childAge" placeholder="Age in years/months" rows="2"></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="childSymptoms" class="form-label">
+                          <i class="fas fa-stethoscope"></i> Child Symptoms
+                        </label>
+                        <textarea class="form-control" id="childSymptoms" rows="2" placeholder="Describe child's symptoms..."></textarea>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="growthConcerns" class="form-label">
+                          <i class="fas fa-chart-line"></i> Growth Concerns
+                        </label>
+                        <textarea class="form-control" id="growthConcerns" rows="2" placeholder="Any growth or development concerns..."></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="behaviorChanges" class="form-label">
+                          <i class="fas fa-child"></i> Behavior Changes
+                        </label>
+                        <textarea class="form-control" id="behaviorChanges" rows="2" placeholder="Any recent behavior changes..."></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="action-section">
+                    <button class="btn btn-warning child-btn" onclick="monitorChildHealth()">
+                      <i class="fas fa-baby"></i> Monitor Child Health
+                    </button>
+                  </div>
+                </div>
+                <div id="childResult" class="result-section"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Medicine Database -->
+  <div class="modal fade" id="medicineModal" tabindex="-1" aria-labelledby="medicineModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content medicine-modal">
+        <div class="modal-header medicine-header">
+          <div class="header-content">
+            <div class="header-icon">
+              <i class="fas fa-pills"></i>
+            </div>
+            <div class="header-text">
+              <h4 class="modal-title" id="medicineModalLabel">💊 AI Medicine Database</h4>
+              <p class="header-subtitle">Comprehensive medicine information powered by AI</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        
+        <div class="modal-body medicine-body">
+          <!-- Feature Cards -->
+          <div class="feature-cards mb-4">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="feature-card active" onclick="switchTab('info')">
+                  <div class="card-icon">
+                    <i class="fas fa-info-circle"></i>
+                  </div>
+                  <div class="card-content">
+                    <h6>Medicine Info</h6>
+                    <p>Search comprehensive medicine details</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="feature-card" onclick="switchTab('interactions')">
+                  <div class="card-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                  </div>
+                  <div class="card-content">
+                    <h6>Drug Interactions</h6>
+                    <p>Check medicine compatibility</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="feature-card" onclick="switchTab('dosage')">
+                  <div class="card-icon">
+                    <i class="fas fa-calculator"></i>
+                  </div>
+                  <div class="card-content">
+                    <h6>Dosage Calculator</h6>
+                    <p>Personalized dosage recommendations</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-content" id="medicineTabContent">
+            <!-- Medicine Info Tab -->
+            <div class="tab-pane fade show active" id="info" role="tabpanel">
+              <div class="search-section">
+                <div class="search-header">
+                  <h5><i class="fas fa-search"></i> Medicine Information Search</h5>
+                  <p>Get comprehensive details about any medicine</p>
+                </div>
+                <div class="search-box">
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="fas fa-pills"></i>
+                    </span>
+                    <input type="text" class="form-control search-input" id="medicineName" placeholder="Enter medicine name (e.g., Paracetamol, Aspirin, Ibuprofen)">
+                    <button class="btn btn-primary search-btn" onclick="getMedicineInfo()">
+                      <i class="fas fa-search"></i> Search
+                    </button>
+                  </div>
+                </div>
+                <div id="medicineInfoResult" class="result-section"></div>
+              </div>
+            </div>
+            
+            <!-- Drug Interactions Tab -->
+            <div class="tab-pane fade" id="interactions" role="tabpanel">
+              <div class="interactions-section">
+                <div class="section-header">
+                  <h5><i class="fas fa-exclamation-triangle"></i> Drug Interaction Checker</h5>
+                  <p>Check for potential interactions between multiple medicines</p>
+                </div>
+                <div class="medicine-input-section">
+                  <label class="form-label">Medicines to Check:</label>
+                  <div id="medicineList" class="medicine-list">
+                    <div class="medicine-input-group">
+                      <div class="input-group">
+                        <span class="input-group-text">
+                          <i class="fas fa-pills"></i>
+                        </span>
+                        <input type="text" class="form-control medicine-input" placeholder="Medicine 1">
+                        <button class="btn btn-outline-danger remove-btn" onclick="removeMedicine(this)">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="medicine-input-group">
+                      <div class="input-group">
+                        <span class="input-group-text">
+                          <i class="fas fa-pills"></i>
+                        </span>
+                        <input type="text" class="form-control medicine-input" placeholder="Medicine 2">
+                        <button class="btn btn-outline-danger remove-btn" onclick="removeMedicine(this)">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <button class="btn btn-outline-primary add-medicine-btn" onclick="addMedicineField()">
+                    <i class="fas fa-plus"></i> Add Another Medicine
+                  </button>
+                </div>
+                <div class="action-section">
+                  <button class="btn btn-warning check-btn" onclick="checkDrugInteractions()">
+                    <i class="fas fa-exclamation-triangle"></i> Check Interactions
+                  </button>
+                </div>
+                <div id="interactionsResult" class="result-section"></div>
+              </div>
+            </div>
+            
+            <!-- Dosage Calculator Tab -->
+            <div class="tab-pane fade" id="dosage" role="tabpanel">
+              <div class="dosage-section">
+                <div class="section-header">
+                  <h5><i class="fas fa-calculator"></i> Dosage Calculator</h5>
+                  <p>Get personalized dosage recommendations based on age and weight</p>
+                </div>
+                <div class="dosage-form">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="dosageMedicine" class="form-label">
+                          <i class="fas fa-pills"></i> Medicine Name
+                        </label>
+                        <input type="text" class="form-control" id="dosageMedicine" placeholder="Enter medicine name">
+                      </div>
+                      <div class="form-group">
+                        <label for="patientAge" class="form-label">
+                          <i class="fas fa-birthday-cake"></i> Age (years)
+                        </label>
+                        <input type="number" class="form-control" id="patientAge" min="0" max="120" placeholder="Enter age">
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="patientWeight" class="form-label">
+                          <i class="fas fa-weight"></i> Weight (kg)
+                        </label>
+                        <input type="number" class="form-control" id="patientWeight" min="0" max="300" placeholder="Enter weight">
+                      </div>
+                      <div class="form-group">
+                        <label for="patientCondition" class="form-label">
+                          <i class="fas fa-stethoscope"></i> Condition
+                        </label>
+                        <input type="text" class="form-control" id="patientCondition" placeholder="e.g., fever, pain, headache">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="action-section">
+                    <button class="btn btn-success calculate-btn" onclick="calculateDosage()">
+                      <i class="fas fa-calculator"></i> Calculate Dosage
+                    </button>
+                  </div>
+                </div>
+                <div id="dosageResult" class="result-section"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ResponsiveVoice.js for better TTS -->
+  <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_KEY"></script>
+  
+  <!-- Scripts -->
+  <script>
+    let isLoading = false;
+    let currentConversationId = null;
+
+    function scrollToBottom() {
+      const chat = document.getElementById('chatMessages');
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function formatMessage(text) {
+      const escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return escaped.replace(/\n/g, "<br>");
+    }
+
+
+
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      const lang = document.getElementById('languageSelect').value;
+
+      if (!message || isLoading) return;
+
+      isLoading = true;
+      document.getElementById('typingIndicator').style.display = 'block';
+
+      addMessage(message, 'user');
+      input.value = '';
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, language: lang, conversation_id: currentConversationId })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          currentConversationId = data.conversation_id;
+          addMessage(data.response, 'ai', data.language || 'en');
+
+          if (data.followup) setTimeout(() => addMessage(`💬 Follow-up: ${data.followup}`, 'ai'), 800);
+          if (data.mental_health_support) setTimeout(() => addMessage(`🧠 Mental Health Support:\n${data.mental_health_support}`, 'ai'), 1000);
+
+
+
+          if (data.voice_url) {
+            const audio = new Audio(data.voice_url);
+            audio.play();
+          }
+        } else {
+          throw new Error(data.error || 'AI response error');
+        }
+      } catch (err) {
+        addMessage('⚠️ Sorry, I couldn\'t process your request.', 'ai');
+        console.error('Fetch failed:', err);
+      } finally {
+        isLoading = false;
+        document.getElementById('typingIndicator').style.display = 'none';
+      }
+    }
+
+
+
+    function saveConversationToServer() {
+      if (!currentConversationId) return alert('⚠️ No conversation to save.');
+      fetch(`/api/save-chat/${currentConversationId}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            alert('✅ Conversation saved successfully!');
+          } else {
+            alert('❌ Save failed: ' + (data.error || 'Unknown error'));
+          }
+        })
+        .catch(err => {
+          console.error('Save error:', err);
+          alert('❌ Save failed. Please try again.');
+        });
+    }
+
+    function loadSavedChats() {
+      fetch('/api/saved-chats')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('savedChatsList');
+          list.innerHTML = '';
+          const savedChats = data.saved_chats || [];
+          if (savedChats.length === 0) {
+            list.innerHTML = '<p class="text-muted">No saved chats found.</p>';
+            return;
+          }
+          savedChats.forEach(chat => {
+            const item = document.createElement('div');
+            item.className = 'saved-chat-item p-3 border-bottom';
+            const savedDate = new Date(chat.saved_at).toLocaleString();
+            item.innerHTML = `
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>${chat.title}</strong>
+                  <br><small class="text-muted">Saved: ${savedDate}</small>
+                </div>
+                <div>
+                  <button class="btn btn-sm btn-primary me-2" onclick="viewSavedChat('${chat.id}')">View</button>
+                  <button class="btn btn-sm btn-danger" onclick="deleteSavedChat('${chat.id}')">Delete</button>
+                </div>
+              </div>
+            `;
+            list.appendChild(item);
+          });
+          // Save state after modal opens
+          setTimeout(saveCurrentState, 100);
+        })
+        .catch(err => {
+          console.error('Error loading saved chats:', err);
+          document.getElementById('savedChatsList').innerHTML = '<p class="text-danger">Error loading saved chats.</p>';
+        });
+    }
+
+    function viewSavedChat(chatId) {
+      fetch(`/api/saved-chat/${chatId}`)
+        .then(res => res.json())
+        .then(data => {
+          const savedChat = data.saved_chat;
+          if (savedChat && savedChat.conversation) {
+            // Clear current messages
+            document.getElementById('messagesContainer').innerHTML = '';
+            // Load saved conversation
+            savedChat.conversation.forEach(entry => {
+              addMessage(entry.user_message, 'user');
+              addMessage(entry.ai_response, 'ai', entry.language || 'en');
+            });
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('savedChatsModal'));
+            modal.hide();
+          }
+        })
+        .catch(err => {
+          console.error('Error viewing saved chat:', err);
+          alert('Error loading saved chat.');
+        });
+    }
+
+    function deleteSavedChat(chatId) {
+      if (!confirm('Are you sure you want to delete this saved chat?')) return;
+      
+      fetch(`/api/delete-saved-chat/${chatId}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            loadSavedChats(); // Reload the list
+          } else {
+            alert('Error deleting chat.');
+          }
+        })
+        .catch(err => {
+          console.error('Error deleting saved chat:', err);
+          alert('Error deleting saved chat.');
+        });
+    }
+
+    function downloadPDF() {
+      if (!currentConversationId) return alert('⚠️ No conversation to export.');
+      const url = `/api/generate-pdf/${currentConversationId}`;
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.download = `health_report_${currentConversationId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function startVoiceInput() {
+      if (!('webkitSpeechRecognition' in window)) return alert('Your browser does not support Speech Recognition.');
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = document.getElementById('languageSelect').value === 'ur' ? 'ur-PK' : 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (event) => {
+        document.getElementById('messageInput').value = event.results[0][0].transcript;
+      };
+
+      recognition.onerror = (event) => alert('Speech recognition error: ' + event.error);
+
+      recognition.start();
+    }
+
+    function clearMessages() {
+      document.getElementById('messagesContainer').innerHTML = '';
+    }
+
+    // Text-to-Speech functionality
+    let speechSynthesis = window.speechSynthesis;
+    let currentUtterance = null;
+    let ttsEnabled = false;
+
+    function toggleTextToSpeech() {
+      ttsEnabled = !ttsEnabled;
+      const ttsBtn = document.querySelector('.tts-btn');
+      
+      if (ttsEnabled) {
+        ttsBtn.innerHTML = '<i class="fas fa-volume-mute"></i> <span>Stop</span>';
+        // Auto-read the latest AI response
+        const aiMessages = document.querySelectorAll('.ai-message');
+        if (aiMessages.length > 0) {
+          const latestMessage = aiMessages[aiMessages.length - 1];
+          const messageText = latestMessage.querySelector('.message-text').textContent;
+          speakText(messageText);
+        }
+      } else {
+        ttsBtn.innerHTML = '<i class="fas fa-volume-up"></i> <span>Voice Output</span>';
+        stopSpeaking();
+      }
+    }
+
+    function speakText(text) {
+      if (!ttsEnabled) return;
+      
+      stopSpeaking(); // Stop any current speech
+      
+      // Detect language from the actual text content
+      let detectedLanguage = 'en';
+      
+      // Check for Roman Urdu words in the text
+      const romanUrduWords = [
+        'main', 'mein', 'mujhe', 'mujhay', 'mera', 'meri', 'mere', 'ham', 'hum',
+        'aap', 'tum', 'wo', 'ye', 'yeh', 'kya', 'kahan', 'kab', 'kaise', 'kyun',
+        'hai', 'hain', 'tha', 'thi', 'the', 'raha', 'rahi', 'rahe', 'kar', 'karne',
+        'dard', 'bimar', 'bemar', 'takleef', 'problem', 'masla', 'ilaaj', 'dawai',
+        'doctor', 'daktar', 'hospital', 'aspatal', 'symptoms', 'alamat', 'behtar',
+        'acha', 'acha hai', 'theek', 'theek hai', 'nahi', 'nahin', 'haan', 'han',
+        'bilkul', 'zaroor', 'shayad', 'lagta', 'lagti', 'lagte', 'samajh', 'pata'
+      ];
+      
+      const textLower = text.toLowerCase();
+      const urduWordCount = romanUrduWords.filter(word => textLower.includes(word)).length;
+      
+      // If more than 3 Roman Urdu words found, treat as Urdu
+      if (urduWordCount >= 3) {
+        detectedLanguage = 'ur';
+      }
+      
+      // Try ResponsiveVoice first (if available)
+      if (typeof responsiveVoice !== 'undefined') {
+        if (detectedLanguage === 'ur') {
+          // Use Hindi voice for Urdu (closest available)
+          responsiveVoice.speak(text, "Hindi Female", {
+            rate: 0.8,
+            pitch: 1.0,
+            volume: 1.0,
+            onend: () => {
+              currentUtterance = null;
+            }
+          });
+          console.log('Using ResponsiveVoice Hindi for Urdu');
+        } else {
+          responsiveVoice.speak(text, "US English Female", {
+            rate: 0.9,
+            pitch: 1.0,
+            volume: 1.0,
+            onend: () => {
+              currentUtterance = null;
+            }
+          });
+          console.log('Using ResponsiveVoice English');
+        }
+        currentUtterance = 'responsiveVoice';
+        return;
+      }
+      
+      // Fallback to Google Translate TTS
+      if (detectedLanguage === 'ur') {
+        const encodedText = encodeURIComponent(text);
+        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=ur&client=tw-ob`;
+        
+        const audio = new Audio(ttsUrl);
+        audio.onended = () => {
+          currentUtterance = null;
+        };
+        audio.onerror = (event) => {
+          console.error('Google TTS error:', event);
+          currentUtterance = null;
+          fallbackTTS(text);
+        };
+        
+        currentUtterance = audio;
+        audio.play();
+        console.log('Using Google TTS for Urdu');
+        
+      } else {
+        fallbackTTS(text);
+      }
+    }
+    
+    function fallbackTTS(text) {
+      currentUtterance = new SpeechSynthesisUtterance(text);
+      currentUtterance.lang = 'en-US';
+      currentUtterance.rate = 0.9;
+      currentUtterance.pitch = 1.0;
+      currentUtterance.volume = 1.0;
+      
+      currentUtterance.onend = () => {
+        currentUtterance = null;
+      };
+      
+      currentUtterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        currentUtterance = null;
+      };
+      
+      speechSynthesis.speak(currentUtterance);
+      console.log('Using browser TTS for English');
+    }
+
+    function stopSpeaking() {
+      if (currentUtterance) {
+        if (currentUtterance === 'responsiveVoice' && typeof responsiveVoice !== 'undefined') {
+          responsiveVoice.cancel();
+        } else if (currentUtterance instanceof HTMLAudioElement) {
+          currentUtterance.pause();
+          currentUtterance.currentTime = 0;
+        } else {
+          speechSynthesis.cancel();
+        }
+        currentUtterance = null;
+      }
+    }
+
+    // Auto-speak new AI messages when TTS is enabled
+    function addMessage(text, sender, language = 'en') {
+      const messagesContainer = document.getElementById('messagesContainer');
+      const messageDiv = document.createElement('div');
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      messageDiv.className = `message ${sender}-message animate__animated animate__fadeInUp`;
+      messageDiv.innerHTML = sender === 'ai' ? `
+        <div class="message-avatar"><i class="fas fa-robot"></i></div>
+        <div class="message-content">
+          <div class="message-bubble">
+            <div class="message-text">${formatMessage(text)} ${language === 'ur' ? '<div class="language-badge">اردو</div>' : ''}</div>
+            <div class="message-time">${timeString}</div>
+          </div>
+        </div>` : `
+        <div class="message-content">
+          <div class="message-bubble">
+            <div class="message-text">${formatMessage(text)}</div>
+            <div class="message-time">${timeString}</div>
+          </div>
+        </div>
+        <div class="message-avatar"><i class="fas fa-user"></i></div>`;
+
+      messagesContainer.appendChild(messageDiv);
+      setTimeout(() => messageDiv.classList.add('show'), 50);
+      scrollToBottom();
+      
+      // Auto-speak AI messages when TTS is enabled
+      if (sender === 'ai' && ttsEnabled) {
+        setTimeout(() => speakText(text), 500); // Small delay to let message appear
+      }
+    }
+
+    // Share functionality
+    function showShareOptions() {
+      if (!currentConversationId) {
+        alert('⚠️ No conversation to share.');
+        return;
+      }
+      const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+      modal.show();
+      // Save state after modal opens
+      setTimeout(saveCurrentState, 100);
+    }
+
+    async function shareViaWhatsApp() {
+      if (!currentConversationId) return;
+      
+      try {
+        const response = await fetch(`/api/share-whatsapp/${currentConversationId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          window.open(data.whatsapp_url, '_blank');
+          const modal = bootstrap.Modal.getInstance(document.getElementById('shareModal'));
+          modal.hide();
+        } else {
+          alert('❌ Error sharing via WhatsApp: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        console.error('WhatsApp share error:', err);
+        alert('❌ Error sharing via WhatsApp. Please try again.');
+      }
+    }
+
+
+
+    function copyShareLink() {
+      if (!currentConversationId) return;
+      
+      const shareUrl = `${window.location.origin}/api/generate-pdf/${currentConversationId}`;
+      
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('✅ Share link copied to clipboard!');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('shareModal'));
+        modal.hide();
+      }).catch(() => {
+        alert('❌ Failed to copy link. Please copy manually: ' + shareUrl);
+      });
+    }
+
+    // Medicine Database Functions
+    function showMedicineDatabase() {
+      const modal = new bootstrap.Modal(document.getElementById('medicineModal'));
+      modal.show();
+      // Save state after modal opens
+      setTimeout(saveCurrentState, 100);
+    }
+
+    function switchTab(tabName) {
+      // Remove active class from all tabs and cards
+      document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('show', 'active'));
+      document.querySelectorAll('.feature-card').forEach(card => card.classList.remove('active'));
+      
+      // Add active class to selected tab and card
+      document.getElementById(tabName).classList.add('show', 'active');
+      document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+      
+      // Save state after tab switch
+      setTimeout(saveCurrentState, 100);
+    }
+
+    async function getMedicineInfo() {
+      const medicineName = document.getElementById('medicineName').value.trim();
+      const language = document.getElementById('languageSelect').value;
+      
+      if (!medicineName) {
+        alert('⚠️ Please enter a medicine name.');
+        return;
+      }
+      
+      const resultDiv = document.getElementById('medicineInfoResult');
+      resultDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Searching medicine information...</div>';
+      
+      try {
+        const response = await fetch('/api/medicine-info', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            medicine: medicineName,
+            language: language 
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <div class="alert alert-info">
+              <h6><i class="fas fa-pills"></i> ${data.medicine_name}</h6>
+              <hr>
+              <div style="white-space: pre-line;">${data.information}</div>
+            </div>
+          `;
+          
+
+        } else {
+          resultDiv.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.error}</div>`;
+        }
+      } catch (err) {
+        console.error('Medicine info error:', err);
+        resultDiv.innerHTML = '<div class="alert alert-danger">❌ Error fetching medicine information.</div>';
+      }
+    }
+
+    function addMedicineField() {
+      const medicineList = document.getElementById('medicineList');
+      const newField = document.createElement('div');
+      newField.className = 'medicine-input-group';
+      newField.innerHTML = `
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="fas fa-pills"></i>
+          </span>
+          <input type="text" class="form-control medicine-input" placeholder="Medicine ${medicineList.children.length + 1}">
+          <button class="btn btn-outline-danger remove-btn" onclick="removeMedicine(this)">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `;
+      medicineList.appendChild(newField);
+    }
+
+    function removeMedicine(button) {
+      if (document.querySelectorAll('.medicine-input').length > 2) {
+        button.parentElement.remove();
+      } else {
+        alert('⚠️ At least 2 medicines are required for interaction check.');
+      }
+    }
+
+    async function checkDrugInteractions() {
+      const medicineInputs = document.querySelectorAll('.medicine-input');
+      const medicines = Array.from(medicineInputs).map(input => input.value.trim()).filter(value => value);
+      const language = document.getElementById('languageSelect').value;
+      
+      if (medicines.length < 2) {
+        alert('⚠️ Please enter at least 2 medicines for interaction check.');
+        return;
+      }
+      
+      const resultDiv = document.getElementById('interactionsResult');
+      resultDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Checking drug interactions...</div>';
+      
+      try {
+        const response = await fetch('/api/drug-interactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            medicines: medicines,
+            language: language 
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <div class="alert alert-warning">
+              <h6><i class="fas fa-exclamation-triangle"></i> Drug Interactions Check</h6>
+              <p><strong>Medicines:</strong> ${data.medicines.join(', ')}</p>
+              <hr>
+              <div style="white-space: pre-line;">${data.interactions}</div>
+            </div>
+          `;
+          
+
+        } else {
+          resultDiv.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.error}</div>`;
+        }
+      } catch (err) {
+        console.error('Drug interactions error:', err);
+        resultDiv.innerHTML = '<div class="alert alert-danger">❌ Error checking drug interactions.</div>';
+      }
+    }
+
+    async function calculateDosage() {
+      const medicine = document.getElementById('dosageMedicine').value.trim();
+      const age = document.getElementById('patientAge').value;
+      const weight = document.getElementById('patientWeight').value;
+      const condition = document.getElementById('patientCondition').value.trim();
+      const language = document.getElementById('languageSelect').value;
+      
+      if (!medicine) {
+        alert('⚠️ Please enter a medicine name.');
+        return;
+      }
+      
+      if (!age || !weight) {
+        alert('⚠️ Please enter age and weight.');
+        return;
+      }
+      
+      const resultDiv = document.getElementById('dosageResult');
+      resultDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Calculating dosage...</div>';
+      
+      try {
+        const response = await fetch('/api/dosage-calculator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            medicine: medicine,
+            age: parseInt(age),
+            weight: parseFloat(weight),
+            condition: condition,
+            language: language 
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <div class="alert alert-success">
+              <h6><i class="fas fa-calculator"></i> Dosage Calculation</h6>
+              <p><strong>Medicine:</strong> ${data.medicine_name}</p>
+              <p><strong>Age:</strong> ${data.age} years | <strong>Weight:</strong> ${data.weight} kg</p>
+              <hr>
+              <div style="white-space: pre-line;">${data.dosage_info}</div>
+            </div>
+          `;
+          
+
+        } else {
+          resultDiv.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.error}</div>`;
+        }
+      } catch (err) {
+        console.error('Dosage calculation error:', err);
+        resultDiv.innerHTML = '<div class="alert alert-danger">❌ Error calculating dosage.</div>';
+      }
+    }
+
+    // AI Diagnostics Functions
+    function showDiagnosticsModal() {
+      const modal = new bootstrap.Modal(document.getElementById('diagnosticsModal'));
+      modal.show();
+      // Save state after modal opens
+      setTimeout(saveCurrentState, 100);
+    }
+
+    function switchDiagnosticTab(tabName) {
+      // Remove active class from all tabs and cards
+      document.querySelectorAll('#diagnosticTabContent .tab-pane').forEach(tab => tab.classList.remove('show', 'active'));
+      document.querySelectorAll('#diagnosticsModal .feature-card').forEach(card => card.classList.remove('active'));
+      
+      // Add active class to selected tab and card
+      document.getElementById(tabName).classList.add('show', 'active');
+      document.querySelector(`#diagnosticsModal [onclick="switchDiagnosticTab('${tabName}')"]`).classList.add('active');
+      
+      // Save state after tab switch
+      setTimeout(saveCurrentState, 100);
+    }
+
+    async function analyzeSymptoms() {
+      const age = document.getElementById('symptomAge').value;
+      const gender = document.getElementById('symptomGender').value;
+      const symptoms = document.getElementById('symptomText').value.trim();
+      const medicalHistory = document.getElementById('medicalHistory').value.trim();
+      const language = document.getElementById('languageSelect').value;
+      
+      if (!symptoms) {
+        alert('⚠️ Please describe your symptoms');
+        return;
+      }
+      
+      const resultDiv = document.getElementById('symptomResult');
+      resultDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Analyzing symptoms...</div>';
+      
+      try {
+        const response = await fetch('/api/symptom-analyzer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            age: parseInt(age) || 0,
+            gender: gender,
+            symptoms: symptoms,
+            medical_history: medicalHistory,
+            language: language
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <div class="alert alert-success">
+              <h6><i class="fas fa-search"></i> Symptom Analysis Results</h6>
+              <div style="white-space: pre-line;">${data.analysis}</div>
+            </div>
+          `;
+          
+
+        } else {
+          resultDiv.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.error}</div>`;
+        }
+      } catch (err) {
+        console.error('Symptom analysis error:', err);
+        resultDiv.innerHTML = '<div class="alert alert-danger">❌ Error analyzing symptoms.</div>';
+      }
+    }
+
+    async function predictDisease() {
+      const age = document.getElementById('diseaseAge').value;
+      const symptoms = document.getElementById('diseaseSymptoms').value.trim();
+      const riskFactors = document.getElementById('riskFactors').value.trim();
+      const familyHistory = document.getElementById('familyHistory').value.trim();
+      const language = document.getElementById('languageSelect').value;
+      
+      if (!symptoms) {
+        alert('⚠️ Please describe your symptoms');
+        return;
+      }
+      
+      const resultDiv = document.getElementById('diseaseResult');
+      resultDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Predicting disease risk...</div>';
+      
+      try {
+        const response = await fetch('/api/disease-predictor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            age: parseInt(age) || 0,
+            symptoms: symptoms.split(',').map(s => s.trim()),
+            risk_factors: riskFactors.split(',').map(s => s.trim()),
+            family_history: familyHistory,
+            lifestyle: '',
+            language: language
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <div class="alert alert-warning">
+              <h6><i class="fas fa-virus"></i> Disease Risk Assessment</h6>
+              <div style="white-space: pre-line;">${data.prediction}</div>
+            </div>
+          `;
+          
+
+        } else {
+          resultDiv.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.error}</div>`;
+        }
+      } catch (err) {
+        console.error('Disease prediction error:', err);
+        resultDiv.innerHTML = '<div class="alert alert-danger">❌ Error predicting disease risk.</div>';
+      }
+    }
+
+    async function calculateGeneticRisk() {
+      const age = document.getElementById('geneticAge').value;
+      const ethnicity = document.getElementById('ethnicity').value.trim();
+      const familyHistory = document.getElementById('familyHistoryGenetic').value.trim();
+      const language = document.getElementById('languageSelect').value;
+      
+      if (!familyHistory) {
+        alert('⚠️ Please provide family medical history');
+        return;
+      }
+      
+      const resultDiv = document.getElementById('geneticResult');
+      resultDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Calculating genetic risk...</div>';
+      
+      try {
+        const response = await fetch('/api/genetic-risk-calculator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            age: parseInt(age) || 0,
+            ethnicity: ethnicity,
+            family_history: familyHistory,
+            lifestyle: {},
+            language: language
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <div class="alert alert-info">
+              <h6><i class="fas fa-dna"></i> Genetic Risk Assessment</h6>
+              <div style="white-space: pre-line;">${data.genetic_risk}</div>
+            </div>
+          `;
+          
+
+        } else {
+          resultDiv.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.error}</div>`;
+        }
+      } catch (err) {
+        console.error('Genetic risk calculation error:', err);
+        resultDiv.innerHTML = '<div class="alert alert-danger">❌ Error calculating genetic risk.</div>';
+      }
+    }
+
+    async function assessMentalHealth() {
+      const symptoms = document.getElementById('mentalSymptoms').value.trim();
+      const moodChanges = document.getElementById('moodChanges').value.trim();
+      const sleepPatterns = document.getElementById('sleepPatterns').value.trim();
+      const stressLevels = document.getElementById('stressLevels').value.trim();
+      const language = document.getElementById('languageSelect').value;
+      
+      if (!symptoms) {
+        alert('⚠️ Please describe your mental health symptoms');
+        return;
+      }
+      
+      const resultDiv = document.getElementById('mentalResult');
+      resultDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Assessing mental health...</div>';
+      
+      try {
+        const response = await fetch('/api/mental-health-assessment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            symptoms: symptoms.split(',').map(s => s.trim()),
+            mood_changes: moodChanges,
+            sleep_patterns: sleepPatterns,
+            stress_levels: stressLevels,
+            life_events: '',
+            language: language
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <div class="alert alert-success">
+              <h6><i class="fas fa-brain"></i> Mental Health Assessment</h6>
+              <div style="white-space: pre-line;">${data.mental_health_assessment}</div>
+            </div>
+          `;
+          
+
+        } else {
+          resultDiv.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.error}</div>`;
+        }
+      } catch (err) {
+        console.error('Mental health assessment error:', err);
+        resultDiv.innerHTML = '<div class="alert alert-danger">❌ Error assessing mental health.</div>';
+      }
+    }
+
+    async function monitorChildHealth() {
+      const childAge = document.getElementById('childAge').value;
+      const symptoms = document.getElementById('childSymptoms').value.trim();
+      const growthConcerns = document.getElementById('growthConcerns').value.trim();
+      const behaviorChanges = document.getElementById('behaviorChanges').value.trim();
+      const language = document.getElementById('languageSelect').value;
+      
+      if (!childAge || !symptoms) {
+        alert('⚠️ Please provide child age and symptoms');
+        return;
+      }
+      
+      const resultDiv = document.getElementById('childResult');
+      resultDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Monitoring child health...</div>';
+      
+      try {
+        const response = await fetch('/api/child-health-monitor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            child_age: parseInt(childAge) || 0,
+            symptoms: symptoms,
+            growth_concerns: growthConcerns,
+            behavior_changes: behaviorChanges,
+            vaccination_status: '',
+            language: language
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <div class="alert alert-warning">
+              <h6><i class="fas fa-baby"></i> Child Health Assessment</h6>
+              <div style="white-space: pre-line;">${data.child_health_assessment}</div>
+            </div>
+          `;
+          
+
+        } else {
+          resultDiv.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.error}</div>`;
+        }
+      } catch (err) {
+        console.error('Child health monitoring error:', err);
+        resultDiv.innerHTML = '<div class="alert alert-danger">❌ Error monitoring child health.</div>';
+      }
+    }
+
+    // Prevent page refresh from going back to main page
+    // Save current state to localStorage
+    function saveCurrentState() {
+      const state = {
+        conversationId: currentConversationId,
+        messages: document.getElementById('messagesContainer').innerHTML,
+        language: document.getElementById('languageSelect').value,
+        timestamp: Date.now(),
+        // Save modal states
+        activeModal: getActiveModal(),
+        activeTab: getActiveTab(),
+        // Save modal content
+        modalContent: getModalContent()
+      };
+      localStorage.setItem('chatState', JSON.stringify(state));
+    }
+
+    // Get modal content (results)
+    function getModalContent() {
+      const content = {};
+      
+      // Medicine modal content
+      const medicineInfoResult = document.getElementById('medicineInfoResult');
+      if (medicineInfoResult && medicineInfoResult.innerHTML.trim()) {
+        content.medicineInfoResult = medicineInfoResult.innerHTML;
+      }
+      
+      const interactionsResult = document.getElementById('interactionsResult');
+      if (interactionsResult && interactionsResult.innerHTML.trim()) {
+        content.interactionsResult = interactionsResult.innerHTML;
+      }
+      
+      const dosageResult = document.getElementById('dosageResult');
+      if (dosageResult && dosageResult.innerHTML.trim()) {
+        content.dosageResult = dosageResult.innerHTML;
+      }
+      
+      // Diagnostics modal content
+      const symptomResult = document.getElementById('symptomResult');
+      if (symptomResult && symptomResult.innerHTML.trim()) {
+        content.symptomResult = symptomResult.innerHTML;
+      }
+      
+      const diseaseResult = document.getElementById('diseaseResult');
+      if (diseaseResult && diseaseResult.innerHTML.trim()) {
+        content.diseaseResult = diseaseResult.innerHTML;
+      }
+      
+      const geneticResult = document.getElementById('geneticResult');
+      if (geneticResult && geneticResult.innerHTML.trim()) {
+        content.geneticResult = geneticResult.innerHTML;
+      }
+      
+      const mentalResult = document.getElementById('mentalResult');
+      if (mentalResult && mentalResult.innerHTML.trim()) {
+        content.mentalResult = mentalResult.innerHTML;
+      }
+      
+      const childResult = document.getElementById('childResult');
+      if (childResult && childResult.innerHTML.trim()) {
+        content.childResult = childResult.innerHTML;
+      }
+      
+      return content;
+    }
+
+    // Get currently active modal
+    function getActiveModal() {
+      // Check if modal is visible (Bootstrap 5 uses 'show' class and display: block)
+      const medicineModal = document.getElementById('medicineModal');
+      const diagnosticsModal = document.getElementById('diagnosticsModal');
+      const savedChatsModal = document.getElementById('savedChatsModal');
+      const shareModal = document.getElementById('shareModal');
+      
+      if (medicineModal && medicineModal.classList.contains('show') && medicineModal.style.display !== 'none') {
+        return 'medicineModal';
+      } else if (diagnosticsModal && diagnosticsModal.classList.contains('show') && diagnosticsModal.style.display !== 'none') {
+        return 'diagnosticsModal';
+      } else if (savedChatsModal && savedChatsModal.classList.contains('show') && savedChatsModal.style.display !== 'none') {
+        return 'savedChatsModal';
+      } else if (shareModal && shareModal.classList.contains('show') && shareModal.style.display !== 'none') {
+        return 'shareModal';
+      }
+      return null;
+    }
+
+    // Get active tab in current modal
+    function getActiveTab() {
+      // Check medicine modal tabs
+      const medicineTabs = document.querySelectorAll('#medicineTabContent .tab-pane');
+      for (let tab of medicineTabs) {
+        if (tab.classList.contains('show') && tab.classList.contains('active')) {
+          return { modal: 'medicineModal', tab: tab.id };
+        }
+      }
+      
+      // Check diagnostics modal tabs
+      const diagnosticTabs = document.querySelectorAll('#diagnosticTabContent .tab-pane');
+      for (let tab of diagnosticTabs) {
+        if (tab.classList.contains('show') && tab.classList.contains('active')) {
+          return { modal: 'diagnosticsModal', tab: tab.id };
+        }
+      }
+      
+      return null;
+    }
+
+    // Restore state from localStorage
+    function restoreState() {
+      const savedState = localStorage.getItem('chatState');
+      if (savedState) {
+        try {
+          const state = JSON.parse(savedState);
+          const now = Date.now();
+          const timeDiff = now - state.timestamp;
+          
+          // Only restore if state is less than 24 hours old
+          if (timeDiff < 24 * 60 * 60 * 1000) {
+            currentConversationId = state.conversationId;
+            if (state.messages) {
+              document.getElementById('messagesContainer').innerHTML = state.messages;
+            }
+            if (state.language) {
+              document.getElementById('languageSelect').value = state.language;
+            }
+            
+            // Restore modal state after a short delay to ensure Bootstrap is loaded
+            setTimeout(() => {
+              if (state.activeModal) {
+                restoreModalState(state.activeModal, state.activeTab);
+                // Restore modal content
+                if (state.modalContent) {
+                  restoreModalContent(state.modalContent);
+                }
+              }
+            }, 100);
+            
+            console.log('✅ Chat state restored from localStorage');
+          } else {
+            // Clear old state
+            localStorage.removeItem('chatState');
+          }
+        } catch (error) {
+          console.error('Error restoring state:', error);
+          localStorage.removeItem('chatState');
+        }
+      }
+    }
+
+    // Restore modal state
+    function restoreModalState(modalId, activeTab) {
+      try {
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById(modalId));
+        modal.show();
+        
+        // Restore active tab if specified
+        if (activeTab && activeTab.modal === modalId) {
+          setTimeout(() => {
+            if (modalId === 'medicineModal') {
+              switchTab(activeTab.tab);
+            } else if (modalId === 'diagnosticsModal') {
+              switchDiagnosticTab(activeTab.tab);
+            }
+          }, 200);
+        }
+        
+        console.log(`✅ Modal ${modalId} restored`);
+      } catch (error) {
+        console.error('Error restoring modal state:', error);
+      }
+    }
+
+    // Restore modal content
+    function restoreModalContent(modalContent) {
+      if (!modalContent) return;
+      
+      setTimeout(() => {
+        // Restore medicine modal content
+        if (modalContent.medicineInfoResult) {
+          const element = document.getElementById('medicineInfoResult');
+          if (element) element.innerHTML = modalContent.medicineInfoResult;
+        }
+        
+        if (modalContent.interactionsResult) {
+          const element = document.getElementById('interactionsResult');
+          if (element) element.innerHTML = modalContent.interactionsResult;
+        }
+        
+        if (modalContent.dosageResult) {
+          const element = document.getElementById('dosageResult');
+          if (element) element.innerHTML = modalContent.dosageResult;
+        }
+        
+        // Restore diagnostics modal content
+        if (modalContent.symptomResult) {
+          const element = document.getElementById('symptomResult');
+          if (element) element.innerHTML = modalContent.symptomResult;
+        }
+        
+        if (modalContent.diseaseResult) {
+          const element = document.getElementById('diseaseResult');
+          if (element) element.innerHTML = modalContent.diseaseResult;
+        }
+        
+        if (modalContent.geneticResult) {
+          const element = document.getElementById('geneticResult');
+          if (element) element.innerHTML = modalContent.geneticResult;
+        }
+        
+        if (modalContent.mentalResult) {
+          const element = document.getElementById('mentalResult');
+          if (element) element.innerHTML = modalContent.mentalResult;
+        }
+        
+        if (modalContent.childResult) {
+          const element = document.getElementById('childResult');
+          if (element) element.innerHTML = modalContent.childResult;
+        }
+        
+        console.log('✅ Modal content restored');
+      }, 300); // Wait for modal to fully open
+    }
+
+    // Save state before page unload
+    window.addEventListener('beforeunload', saveCurrentState);
+    
+    // Save state periodically (every 30 seconds)
+    setInterval(saveCurrentState, 30000);
+    
+    // Restore state when page loads
+    document.addEventListener('DOMContentLoaded', restoreState);
+
+    // Prevent form submission on Enter key in textarea
+    document.getElementById('messageInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
