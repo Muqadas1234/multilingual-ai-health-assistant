@@ -68,7 +68,7 @@ A sophisticated, production-ready AI-powered health assistant that provides inte
 | Team Lead & Full-Stack Dev| sir Ahmed Gul and Muqadas  | Backend API, AI Integration, Project Architecture |
 | Frontend Developer        | Muqadas                 | UI/UX Design, Responsive Layout, JavaScript       |
 | Testing & Deployment      | Ahmed Gul               | Deployment, Testing, Documentation                |
-| Presentation              | Tehreem Rauop               | Final Presentation, Slides                        |
+| Presentation              |  Tehreem Raouf               | Final Presentation, Slides                        |
 | Project Coordinator       | 	Shahzad Husaain                | Project Coordination                              |
 
 
